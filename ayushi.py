@@ -95,21 +95,28 @@ def create_onedrive_direct_download(sharing_url):
 
 @st.cache_resource
 def load_datasets():
-    # Load movies dictionary first
+    # 1. Load movies dictionary
     with open(MOVIES_DICT_PATH, 'rb') as f:
         movies_dict = pickle.load(f)
     movies_df = pd.DataFrame(movies_dict)
 
-    # Download similarity matrix if it doesn't exist locally
-    if not os.path.exists(PICKLE_FILE):
-        with st.spinner("Downloading similarity matrix from cloud storage... Please wait."):
+    # 2. PASTE THE NEW SAFETY CHECK CODE HERE:
+    # If the file doesn't exist OR if it is tiny (less than 1MB, meaning it's corrupted)
+    if not os.path.exists(PICKLE_FILE) or os.path.getsize(PICKLE_FILE) < 1000000:
+        # Delete the broken tiny file first if it exists
+        if os.path.exists(PICKLE_FILE):
+            os.remove(PICKLE_FILE)
+
+        with st.spinner("Downloading similarity matrix from OneDrive... Please wait."):
             direct_download_url = create_onedrive_direct_download(ONEDRIVE_SHARE_LINK)
             urllib.request.urlretrieve(direct_download_url, PICKLE_FILE)
 
+    # 3. Load the downloaded similarity matrix file safely
     with open(PICKLE_FILE, 'rb') as f:
         similarity_matrix = pickle.load(f)
 
     return movies_df, similarity_matrix
+
 
 
 # Initialize your datasets safely
@@ -119,6 +126,7 @@ movies, similarity = load_datasets()
 
 # movies = pd.DataFrame(movies_dict)
 #
+
 # similarity = pickle.load(open(os.path.join(BASE_DIR, 'similarity.pkl'), 'rb'))
 
 # 4. Streamlit UI Layout
