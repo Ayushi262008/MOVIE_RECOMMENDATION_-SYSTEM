@@ -63,7 +63,41 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 movies_dict = pickle.load(open(os.path.join(BASE_DIR, 'movies_dict.pkl'), 'rb'))
 movies = pd.DataFrame(movies_dict)
 # Line 66: Added the missing 'rb' at the end of the open function
-similarity = pickle.load(open(os.path.join(BASE_DIR, 'similarity.pkl'), 'rb'))
+# similarity = pickle.load(open(os.path.join(BASE_DIR, 'similarity.pkl'), 'rb'))
+
+import os
+import requests
+import pickle
+import base64
+import streamlit as st
+
+# Your converted direct download URL from OneDrive
+ONEDRIVE_DIRECT_URL = "https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvYy82RTYwODk2MjldRTE2NkEyL0lRQWNxeWJIZ1RxZlM0WGJYXzFVNVY4V0FVaHoyRFp5YzhXemJnLVZhZ1huZzlZP2U9T0h2TUhm/root/content"
+PICKLE_FILE = "similarity.pkl"
+
+def download_pickle_if_missing():
+    # Only download if the file isn't already on the Streamlit server
+    if not os.path.exists(PICKLE_FILE):
+        with st.spinner("Downloading similarity data from the cloud... This may take a minute."):
+            try:
+                response = requests.get(ONEDRIVE_DIRECT_URL, stream=True)
+                if response.status_code == 200:
+                    with open(PICKLE_FILE, "wb") as f:
+                        f.write(response.content)
+                else:
+                    st.error(f"Failed to download dataset. Status code: {response.status_code}")
+            except Exception as e:
+                st.error(f"An error occurred during cloud download: {e}")
+
+# Call the download helper first
+download_pickle_if_missing()
+
+# Your original loading code can now safely open it!
+if os.path.exists(PICKLE_FILE):
+    similarity = pickle.load(open(PICKLE_FILE, 'rb'))
+else:
+    st.error("Could not find or load similarity.pkl template.")
+
 # movies_dict = pickle.load(open(os.path.join(BASE_DIR, 'movie_dict.pkl'), 'rb'))
 
 # movies = pd.DataFrame(movies_dict)
