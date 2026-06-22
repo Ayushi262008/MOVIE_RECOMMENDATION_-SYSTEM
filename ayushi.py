@@ -74,11 +74,11 @@ ONEDRIVE_SHARE_LINK = "https://1drv.ms/u/c/6E6089629DE166A2/IQAcqybHgTqfS4XbX_1U
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PICKLE_FILE = os.path.join(BASE_DIR, 'similarity.pkl')
 
-def get_onedrive_direct_url(shared_url):
-    # This automatically converts your link into a valid OneDrive direct download URL
-    base64_bytes = base64.b64encode(shared_url.encode("utf-8"))
-    base64_string = base64_bytes.decode("utf-8").replace('/', '_').replace('+', '-').rstrip('=')
-    return f"https://api.onedrive.com/v1.0/shares/u!{base64_string}/root/content"
+# def get_onedrive_direct_url(shared_url):
+#     # This automatically converts your link into a valid OneDrive direct download URL
+#     base64_bytes = base64.b64encode(shared_url.encode("utf-8"))
+#     base64_string = base64_bytes.decode("utf-8").replace('/', '_').replace('+', '-').rstrip('=')
+#     return f"https://api.onedrive.com/v1.0/shares/u!{base64_string}/root/content"
 
 # Automatically download similarity.pkl if it's missing on the cloud server
 if not os.path.exists(PICKLE_FILE):
