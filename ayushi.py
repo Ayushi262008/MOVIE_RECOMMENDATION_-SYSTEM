@@ -66,7 +66,6 @@ movies = pd.DataFrame(movies_dict)
 # similarity = pickle.load(open(os.path.join(BASE_DIR, 'similarity.pkl'), 'rb'))
 import os
 import pickle
-import base64
 
 # Your exact copied OneDrive link
 ONEDRIVE_SHARE_LINK = "https://1drv.ms/u/c/6E6089629DE166A2/IQAcqybHgTqfS4XbX_1U5V8WAUhz2DZyc8Wzbg-VagXng9Y?e=OHvMHf"
