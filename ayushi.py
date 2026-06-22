@@ -64,27 +64,27 @@ movies_dict = pickle.load(open(os.path.join(BASE_DIR, 'movies_dict.pkl'), 'rb'))
 movies = pd.DataFrame(movies_dict)
 # Line 66: Added the missing 'rb' at the end of the open function
 # similarity = pickle.load(open(os.path.join(BASE_DIR, 'similarity.pkl'), 'rb'))
+# ==========================================
+# # 3. Loading your datasets safely
+# ==========================================
 import os
+import requests
 import pickle
+import pandas as pd
+import streamlit as st
 
-# Your exact copied OneDrive link
-ONEDRIVE_SHARE_LINK = "https://1drv.ms/u/c/6E6089629DE166A2/IQAcqybHgTqfS4XbX_1U5V8WAUhz2DZyc8Wzbg-VagXng9Y?e=OHvMHf"
+# Direct download URL path built from your iframe parameters
+ONEDRIVE_DIRECT_URL = "https://onedrive.live.com/download?cid=6E6089629DE166A2&resid=6E6089629DE166A2%21107&authkey=AIQAcqybHgTqfS4"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PICKLE_FILE = os.path.join(BASE_DIR, 'similarity.pkl')
 
-# def get_onedrive_direct_url(shared_url):
-#     # This automatically converts your link into a valid OneDrive direct download URL
-#     base64_bytes = base64.b64encode(shared_url.encode("utf-8"))
-#     base64_string = base64_bytes.decode("utf-8").replace('/', '_').replace('+', '-').rstrip('=')
-#     return f"https://api.onedrive.com/v1.0/shares/u!{base64_string}/root/content"
-
-# Automatically download similarity.pkl if it's missing on the cloud server
+# STEP A: Check and download similarity.pkl BEFORE trying to load it
 if not os.path.exists(PICKLE_FILE):
     with st.spinner("Downloading similarity data from cloud storage... Please wait."):
         try:
-            direct_download_url = get_onedrive_direct_url(ONEDRIVE_SHARE_LINK)
-            response = requests.get(direct_download_url, stream=True)
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+            response = requests.get(ONEDRIVE_DIRECT_URL, headers=headers, stream=True)
             if response.status_code == 200:
                 with open(PICKLE_FILE, "wb") as f:
                     f.write(response.content)
@@ -93,10 +93,11 @@ if not os.path.exists(PICKLE_FILE):
         except Exception as e:
             st.error(f"An error occurred during cloud download: {e}")
 
-# Now safely load both files cleanly
+# STEP B: Load your movies dictionary file
 movies_dict = pickle.load(open(os.path.join(BASE_DIR, 'movies_dict.pkl'), 'rb'))
 movies = pd.DataFrame(movies_dict)
 
+# STEP C: Now that the file definitely exists, load the similarity data safely
 if os.path.exists(PICKLE_FILE):
     similarity = pickle.load(open(PICKLE_FILE, 'rb'))
 else:
