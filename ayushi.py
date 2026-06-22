@@ -53,7 +53,6 @@ def recommend(movie):
 # ... (your fetch_poster and recommend functions are above here)
 
 # 3. Loading your datasets safely
-import os
 
 # This line finds the exact folder where your ayushi.py file is saved
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
