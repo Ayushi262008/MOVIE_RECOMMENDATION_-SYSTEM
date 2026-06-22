@@ -1,0 +1,141 @@
+import streamlit as st
+import pickle
+import pandas as pd
+import requests
+import urllib.parse
+
+
+# 1. New function replacing fetch_poster(movie_id)
+def fetch_poster(movie_title):
+    # Put your unique 8-character OMDb API key here
+    api_key = "d4c7d8df"
+
+    # URL-encode the movie name to handle spaces safely (e.g. "Iron Man" -> "Iron+Man")
+    encoded_title = urllib.parse.quote(movie_title.strip())
+    url = f"http://www.omdbapi.com/?apikey={api_key}&t={encoded_title}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+
+        if data.get("Response") == "True":
+            poster_url = data.get("Poster")
+            # Ensure OMDb actually has an image asset for it
+            if poster_url and poster_url != "N/A":
+                return poster_url
+
+        # Fallback placeholder image if the poster is missing
+        return "https://via.placeholder.com/500x750.png?text=Poster+Not+Found"
+    except Exception:
+        return "https://via.placeholder.com/500x750.png?text=Error"
+
+
+# 2. Your core recommendation logic
+def recommend(movie):
+    movie_index = movies[movies['title'] == movie].index[0]
+    distances = similarity[movie_index]
+    movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
+
+    recommended_movies = []
+    recommended_movies_posters = []
+
+    for i in movies_list:
+        # Get the title instead of movie_id since we are using OMDb
+        movie_title = movies.iloc[i[0]].title
+        recommended_movies.append(movie_title)
+        # Fetch the poster by passing the title string
+        recommended_movies_posters.append(fetch_poster(movie_title))
+
+    return recommended_movies, recommended_movies_posters
+
+
+# 3. Loading your datasets
+# ... (your fetch_poster and recommend functions are above here)
+
+# 3. Loading your datasets safely
+import os
+
+# This line finds the exact folder where your ayushi.py file is saved
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# These lines use that folder path to find your .pkl files without getting lost
+# Line 63: Notice the 's' in 'movies_dict.pkl' and the added 'rb'
+movies_dict = pickle.load(open(os.path.join(BASE_DIR, 'movies_dict.pkl'), 'rb'))
+movies = pd.DataFrame(movies_dict)
+# Line 66: Added the missing 'rb' at the end of the open function
+similarity = pickle.load(open(os.path.join(BASE_DIR, 'similarity.pkl'), 'rb'))
+# movies_dict = pickle.load(open(os.path.join(BASE_DIR, 'movie_dict.pkl'), 'rb'))
+
+# movies = pd.DataFrame(movies_dict)
+#
+# similarity = pickle.load(open(os.path.join(BASE_DIR, 'similarity.pkl'), 'rb'))
+
+# 4. Streamlit UI Layout
+st.title('𝕐𝕠𝕦𝕣ℕ𝕖𝕩𝕥𝕎𝕒𝕥𝕔𝕙')
+# ... (the rest of your Streamlit code follows below)
+# movies = pd.DataFrame(movies_dict)
+# movies_dict = pickle.load(open('movie_dict.pkl', 'rb'))
+# movies = pd.DataFrame(movies_dict)
+#
+# similarity = pickle.load(open('similarity.pkl', 'rb'))
+
+# 4. Streamlit UI Layout
+# st.title('Movie Recommender System')
+
+selected_movie_name = st.selectbox(
+    '📽️🍿 𝐒𝐞𝐚𝐫𝐜𝐡 𝐟𝐫𝐨𝐦 𝐨𝐯𝐞𝐫 𝟓,𝟎𝟎𝟎+ 𝐌𝐨𝐯𝐢𝐞𝐬 𝐭𝐨 𝐠𝐞𝐭 𝐬𝐭𝐚𝐫𝐭𝐞𝐝 :',
+    movies['title'].values
+)
+
+if st.button('𝙂𝙚𝙣𝙚𝙧𝙖𝙩𝙚 𝙈𝙮 𝙒𝙖𝙩𝙘𝙝𝙡𝙞𝙨𝙩'):
+    names, posters = recommend(selected_movie_name)
+
+    # Note: Modern Streamlit uses st.columns(5) instead of st.beta_columns(5)
+    col1, col2, col3, col4, col5 = st.columns(5)
+
+    with col1:
+        st.text(names[0])
+        st.image(posters[0])
+    with col2:
+        st.text(names[1])
+        st.image(posters[1])
+    with col3:
+        st.text(names[2])
+        st.image(posters[2])
+    with col4:
+        st.text(names[3])
+        st.image(posters[3])
+    with col5:
+        st.text(names[4])
+        st.image(posters[4])
+
+
+# def recommend(movie):
+#     movie_index = movies[movies['title'] == movie].index[0]
+#     distances = similarity[movie_index]
+#     movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
+#
+#     recommended_movies =[]
+#     for i in movies_list:
+#         movie_id = i[0]
+#         # fetch poster from API
+#         recommended_movies.append(movies.iloc[i[0]].title)
+#     return recommended_movies
+#         # print(new_df.iloc[i[0]].title)
+#
+#
+# movies_dict = pickle.load(open('movies_dict.pkl', 'rb'))
+# movies = pd.DataFrame(movies_dict)
+# similarity = pickle.load(open('similarity.pkl', 'rb'))
+#
+# st.title('𝕐𝕠𝕦𝕣ℕ𝕖𝕩𝕥𝕎𝕒𝕥𝕔𝕙')
+# selected_movies_name = st.selectbox(
+#     label='🎥🍿 𝐂𝐡𝐨𝐨𝐬𝐞 𝐚 𝐒𝐞𝐞𝐝 𝐌𝐨𝐯𝐢𝐞 𝐭𝐨 𝐬𝐭𝐚𝐫𝐭 𝐰𝐢𝐭𝐡 𝐎𝐯𝐞𝐫 𝟓𝟎𝟎𝟎+ 𝐌𝐨𝐯𝐢𝐞 :',
+#     options=movies['title'].values
+# )
+# if st.button('RECOMMENDATION'):
+#     recommendations=recommend(selected_movies_name)
+#     for i in recommendations:
+#         st.write(i)
+#
+#
