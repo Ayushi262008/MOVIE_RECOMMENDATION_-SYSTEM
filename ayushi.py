@@ -67,41 +67,53 @@ movies = pd.DataFrame(movies_dict)
 # ==========================================
 # # 3. Loading your datasets safely
 # ==========================================
+# ==============================================================================
+# 3. Loading your datasets safely from OneDrive
+# ==============================================================================
 import os
-import requests
 import pickle
-import pandas as pd
+import base64
+import urllib.request
 import streamlit as st
+import pandas as pd
 
-# Direct download URL path built from your iframe parameters
-ONEDRIVE_DIRECT_URL = "https://onedrive.live.com/download?cid=6E6089629DE166A2&resid=6E6089629DE166A2%21107&authkey=AIQAcqybHgTqfS4"
-
+# Define paths safely using BASE_DIR
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MOVIES_DICT_PATH = os.path.join(BASE_DIR, 'movies_dict.pkl')
 PICKLE_FILE = os.path.join(BASE_DIR, 'similarity.pkl')
 
-# STEP A: Check and download similarity.pkl BEFORE trying to load it
-if not os.path.exists(PICKLE_FILE):
-    with st.spinner("Downloading similarity data from cloud storage... Please wait."):
-        try:
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-            response = requests.get(ONEDRIVE_DIRECT_URL, headers=headers, stream=True)
-            if response.status_code == 200:
-                with open(PICKLE_FILE, "wb") as f:
-                    f.write(response.content)
-            else:
-                st.error(f"Failed to download dataset. Status code: {response.status_code}")
-        except Exception as e:
-            st.error(f"An error occurred during cloud download: {e}")
+# Your exact OneDrive link
+ONEDRIVE_SHARE_LINK = "https://1drv.ms/u/c/6E6089629DE166A2/IQAcqybHgTqfS4XbX_1U5V8WAUhz2DZyc8Wzbg-VagXng9Y?e=zyyWfI"
 
-# STEP B: Load your movies dictionary file
-movies_dict = pickle.load(open(os.path.join(BASE_DIR, 'movies_dict.pkl'), 'rb'))
-movies = pd.DataFrame(movies_dict)
 
-# STEP C: Now that the file definitely exists, load the similarity data safely
-if os.path.exists(PICKLE_FILE):
-    similarity = pickle.load(open(PICKLE_FILE, 'rb'))
-else:
-    st.error("Could not find or load similarity.pkl template.")
+# Function to convert standard OneDrive share link to a direct download link
+def create_onedrive_direct_download(sharing_url):
+    base64_bytes = base64.b64encode(sharing_url.encode("utf-8"))
+    base64_string = base64_bytes.decode("utf-8").replace('=', '').replace('/', '_').replace('+', '-')
+    return f"https://api.onedrive.com/v1.0/shares/u!{base64_string}/root/content"
+
+
+@st.cache_resource
+def load_datasets():
+    # Load movies dictionary first
+    with open(MOVIES_DICT_PATH, 'rb') as f:
+        movies_dict = pickle.load(f)
+    movies_df = pd.DataFrame(movies_dict)
+
+    # Download similarity matrix if it doesn't exist locally
+    if not os.path.exists(PICKLE_FILE):
+        with st.spinner("Downloading similarity matrix from cloud storage... Please wait."):
+            direct_download_url = create_onedrive_direct_download(ONEDRIVE_SHARE_LINK)
+            urllib.request.urlretrieve(direct_download_url, PICKLE_FILE)
+
+    with open(PICKLE_FILE, 'rb') as f:
+        similarity_matrix = pickle.load(f)
+
+    return movies_df, similarity_matrix
+
+
+# Initialize your datasets safely
+movies, similarity = load_datasets()
 
 # movies_dict = pickle.load(open(os.path.join(BASE_DIR, 'movie_dict.pkl'), 'rb'))
 
