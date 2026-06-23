@@ -53,7 +53,7 @@ def recommend(movie):
 # ... (your fetch_poster and recommend functions are above here)
 
 # 3. Loading your datasets safely
-
+import os
 # This line finds the exact folder where your ayushi.py file is saved
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -69,11 +69,9 @@ movies = pd.DataFrame(movies_dict)
 # ==============================================================================
 # 3. Loading your datasets safely from OneDrive
 # ==============================================================================
-import os
 import pickle
 import base64
 import urllib.request
-import streamlit as st
 import pandas as pd
 
 # Define paths safely using BASE_DIR
